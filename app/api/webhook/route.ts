@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import Stripe from "stripe";
+import { onboardedAccounts } from "../../lib/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.preview",
@@ -25,7 +26,14 @@ export async function POST(req: Request) {
     if (event.type === "v2.core.account_link.completed") {
       // @ts-expect-error: v2 events are not typed
       const fullEvent = await stripe.v2.core.events.retrieve(event.id);
-      console.log("Full event:", fullEvent);
+      // @ts-expect-error: v2 events are not typed
+      const data = fullEvent.data;
+      const accountId = data.account_id;
+
+      // Store the account ID
+      onboardedAccounts[accountId] = true;
+      console.log("Added account to database:", accountId);
+      console.log("Current onboarded accounts:", onboardedAccounts);
     }
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
