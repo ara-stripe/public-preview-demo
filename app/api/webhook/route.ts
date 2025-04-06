@@ -21,12 +21,11 @@ export async function POST(req: Request) {
     );
 
     console.log("Received event:", event);
-    // switch (event.type) {
-    //   case "v2.core.account[configuration.recipient].updated":
-    //     const id = event.id;
-    //     console.log("Account requirements updated:", id);
-    // }
-
+    switch (event.type) {
+      // @ts-expect-error: v2 events are not typed
+      case "v2.core.account_link.completed":
+        console.log({ body });
+    }
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     console.error("Webhook error:", err);
