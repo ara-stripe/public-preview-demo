@@ -39,5 +39,6 @@ export async function GET() {
   });
   return NextResponse.json({
     url: accountLink.url,
+    accountId: account.id,
   });
 }
