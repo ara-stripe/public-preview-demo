@@ -6,6 +6,9 @@ export default function Home() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [sendingPayment, setSendingPayment] = useState(false);
 
   const handleGetMoney = async () => {
     setLoading(true);
@@ -35,11 +38,29 @@ export default function Home() {
           setIsOnboarded(true);
           setLoading(false);
           clearInterval(pollInterval);
+
+          // Set payment loading state
+          setSendingPayment(true);
+
+          // Initiate payment
+          const paymentResponse = await fetch("/api/payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accountId }),
+          });
+          const paymentData = await paymentResponse.json();
+
+          if (paymentData.success) {
+            setPaymentId(paymentData.paymentId);
+          } else {
+            setPaymentError(paymentData.error);
+          }
+          setSendingPayment(false);
         }
       } catch (error) {
-        console.error("Error polling status:", error);
+        console.error("Error:", error);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 2000);
 
     return () => clearInterval(pollInterval);
   }, [accountId, isOnboarded]);
@@ -93,9 +114,27 @@ export default function Home() {
               </div>
             )}
             {isOnboarded && (
-              <div className="text-green-400">
-                ✓ Account successfully onboarded!
-              </div>
+              <>
+                <div className="text-green-400">
+                  ✓ Account successfully onboarded!
+                </div>
+                {sendingPayment && (
+                  <div className="animate-pulse text-yellow-400 flex items-center gap-2">
+                    <span>⟳</span>
+                    Sending outbound payment...
+                  </div>
+                )}
+                {paymentId && (
+                  <div className="text-green-400">
+                    ✓ Payment sent! ID: {paymentId}
+                  </div>
+                )}
+                {paymentError && (
+                  <div className="text-red-400">
+                    ✗ Payment failed: {paymentError}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
