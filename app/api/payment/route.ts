@@ -8,11 +8,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   const { accountId } = await req.json();
   // todo dynamically fetch financial account id
+  const financialAccounts =
+    await stripe.v2.moneyManagement.financialAccounts.list();
+  const financialAccountId = financialAccounts.data[0].id;
   try {
     const payout = await stripe.v2.moneyManagement.outboundPayments.create({
       from: {
-        financial_account:
-          "fa_test_65SK3CdqS8HxZTEo7wH16SJgIp1YSQPFiuViibrTEXY7w8",
+        financial_account: financialAccountId,
         currency: "usd",
       },
       to: {
