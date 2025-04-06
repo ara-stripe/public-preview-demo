@@ -24,8 +24,8 @@ export async function POST(req: Request) {
     // @ts-expect-error: v2 events are not typed
     if (event.type === "v2.core.account_link.completed") {
       // @ts-expect-error: v2 events are not typed
-      const relatedEvent = await event.fetchRelatedObject();
-      console.log("Related event:", relatedEvent);
+      const fullEvent = await stripe.v2.core.events.retrieve(event.id);
+      console.log("Full event:", fullEvent);
     }
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
