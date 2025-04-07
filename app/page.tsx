@@ -65,6 +65,13 @@ export default function Home() {
     return () => clearInterval(pollInterval);
   }, [accountId, isOnboarded]);
 
+  // Add new useEffect to watch accountUrl
+  useEffect(() => {
+    if (accountUrl) {
+      window.open(accountUrl, "_blank");
+    }
+  }, [accountUrl]);
+
   return (
     <div className="grid place-items-center min-h-screen bg-slate-900">
       <div className="flex flex-col items-center gap-8 w-full max-w-2xl">
