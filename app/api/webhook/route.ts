@@ -15,16 +15,10 @@ export async function POST(req: Request) {
   const signature = headersList.get("stripe-signature")!;
 
   try {
-    const event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      webhookSecret
-    );
+    const event = stripe.parseThinEvent(body, signature, webhookSecret);
 
     console.log("Received event:", event);
-    // @ts-expect-error: v2 events are not typed
     if (event.type === "v2.core.account_link.completed") {
-      // @ts-expect-error: v2 events are not typed
       const fullEvent = await stripe.v2.core.events.retrieve(event.id);
       // @ts-expect-error: v2 events are not typed
       const data = fullEvent.data;
