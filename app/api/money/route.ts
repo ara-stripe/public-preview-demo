@@ -21,7 +21,6 @@ export async function GET() {
               requested: true,
             },
           },
-          crypto_wallets: {requested: true},
         },
       },
     },
