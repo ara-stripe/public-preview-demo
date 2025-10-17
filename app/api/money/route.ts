@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 export async function GET() {
-  const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY!}`, {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-09-30.preview",
   });
 
@@ -21,7 +21,7 @@ export async function GET() {
               requested: true,
             },
           },
-          // crypto_wallets: {requested: true},
+          crypto_wallets: {requested: true},
         },
       },
     },

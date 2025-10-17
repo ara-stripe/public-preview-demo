@@ -14,8 +14,10 @@ export async function POST(req: Request) {
   const signature = headersList.get("stripe-signature")!;
 
   try {
-    const event = stripe.parseEventNotification(body, signature, webhookSecret);
+    const eventNotification = stripe.parseEventNotification(body, signature, webhookSecret);
+    const event = await eventNotification.fetchEvent();
 
+    console.log("Received event:", event);
     if (event.type === "v2.core.account_link.returned") {
       const fullEvent = await stripe.v2.core.events.retrieve(event.id);
       // @ts-expect-error: v2 events are not typed
