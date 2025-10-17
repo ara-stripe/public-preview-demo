@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-08-27.preview",
-});
 
 export async function GET() {
+  const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY!}`, {
+    apiVersion: "2025-09-30.preview",
+  });
+
   const account = await stripe.v2.core.accounts.create({
     contact_email: "jenny.rosen@example.com",
     display_name: "Ara demo app PUB PREVIEW",
@@ -20,7 +21,7 @@ export async function GET() {
               requested: true,
             },
           },
-          crypto_wallets: {requested: true},
+          // crypto_wallets: {requested: true},
         },
       },
     },
