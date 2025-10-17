@@ -18,7 +18,7 @@ export async function GET() {
       contact_email: "jenny.rosen@example.com",
       display_name: "Ara demo app PUB PREVIEW",
       identity: {
-        country: "ar",
+        country: "us",
         entity_type: "individual",
         individual: {
           phone: "+12345678900",
@@ -26,11 +26,11 @@ export async function GET() {
           given_name: "Jenny",
           surname: "Rosen",
           address: {
-            line1: "Avellaneda 3035",
-            city: "Buenos Aires",
-            state: "Buenos Aires",
-            postal_code: "C1000ABT",
-            country: "AR",
+            line1: "12, 12th street",
+            city: "san francisco",
+            state: "CA",
+            postal_code: "90210",
+            country: "US",
           },
         },
       },
