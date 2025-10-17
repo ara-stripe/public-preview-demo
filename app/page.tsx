@@ -5,10 +5,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
-  const [isOnboarded, setIsOnboarded] = useState(false);
-  const [paymentId, setPaymentId] = useState<string | null>(null);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [sendingPayment, setSendingPayment] = useState(false);
 
   const handleGetMoney = async () => {
     setLoading(true);
@@ -17,55 +13,13 @@ export default function Home() {
       const data = await response.json();
       setAccountUrl(data.url);
       setAccountId(data.accountId);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching money:", error);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!accountId || isOnboarded) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch("/api/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accountId }),
-        });
-        const data = await response.json();
-
-        if (data.isOnboarded) {
-          setIsOnboarded(true);
-          setLoading(false);
-          clearInterval(pollInterval);
-
-          // Set payment loading state
-          setSendingPayment(true);
-
-          // Initiate payment
-          const paymentResponse = await fetch("/api/payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accountId }),
-          });
-          const paymentData = await paymentResponse.json();
-
-          if (paymentData.success) {
-            setPaymentId(paymentData.paymentId);
-          } else {
-            setPaymentError(paymentData.error);
-          }
-          setSendingPayment(false);
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    }, 2000);
-
-    return () => clearInterval(pollInterval);
-  }, [accountId, isOnboarded]);
-
-  // Add new useEffect to watch accountUrl
   useEffect(() => {
     if (accountUrl) {
       window.open(accountUrl, "_blank");
@@ -113,35 +67,6 @@ export default function Home() {
                   {accountUrl}
                 </div>
               </div>
-            )}
-            {accountId && !isOnboarded && (
-              <div className="animate-pulse text-yellow-400 flex items-center gap-2">
-                <span className="">⟳</span>
-                Waiting for account to be onboarded...
-              </div>
-            )}
-            {isOnboarded && (
-              <>
-                <div className="text-green-400">
-                  ✓ Account successfully onboarded!
-                </div>
-                {sendingPayment && (
-                  <div className="animate-pulse text-yellow-400 flex items-center gap-2">
-                    <span>⟳</span>
-                    Sending outbound payment...
-                  </div>
-                )}
-                {paymentId && (
-                  <div className="text-green-400">
-                    ✓ Payment sent! ID: {paymentId}
-                  </div>
-                )}
-                {paymentError && (
-                  <div className="text-red-400">
-                    ✗ Payment failed: {paymentError}
-                  </div>
-                )}
-              </>
             )}
           </div>
         </div>
