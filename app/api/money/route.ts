@@ -6,7 +6,7 @@ export async function GET() {
     apiVersion: "2025-09-30.preview",
   });
 
-  // Create account using fetch since SDK doesn't support v2 accounts with crypto wallets
+  // Create account using fetch since SDK doesn't support v2 accounts with cards
   const accountResponse = await fetch("https://api.stripe.com/v2/core/accounts", {
     method: "POST",
     headers: {
@@ -37,7 +37,7 @@ export async function GET() {
       configuration: {
         recipient: {
           capabilities: {
-            crypto_wallets: {
+            cards: {
               requested: true,
             },
           },

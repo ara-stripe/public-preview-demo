@@ -10,6 +10,10 @@ export default function Home() {
     setLoading(true);
     try {
       const response = await fetch("/api/money");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API error: ${response.status} - ${errorText}`);
+      }
       const data = await response.json();
       setAccountUrl(data.url);
       setAccountId(data.accountId);
