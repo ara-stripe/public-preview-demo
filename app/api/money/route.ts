@@ -25,6 +25,11 @@ export async function GET() {
           email: "jenny.rosen@example.com",
           given_name: "Jenny",
           surname: "Rosen",
+          date_of_birth: {
+            day: 1,
+            month: 1,
+            year: 1990,
+          },
           address: {
             line1: "12, 12th street",
             city: "san francisco",
