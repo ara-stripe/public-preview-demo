@@ -1,23 +1,30 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Stripe from "stripe";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2025-09-30.preview",
   });
 
-  // Create account using fetch since SDK doesn't support v2 accounts with cards
-  const accountResponse = await fetch("https://api.stripe.com/v2/core/accounts", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-      "Content-Type": "application/json",
-      "Stripe-Version": "2025-09-30.preview",
-    },
-    body: JSON.stringify({
-      contact_email: "jenny.rosen@example.com",
-      display_name: "Ara demo app PUB PREVIEW",
-      identity: {
+  // Parse query parameters
+  const searchParams = request.nextUrl.searchParams;
+  const bankAccountsEnabled = searchParams.get("bankAccounts") === "true";
+  const cardsEnabled = searchParams.get("cards") === "true";
+  const prefillIdentity = searchParams.get("prefillIdentity") === "true";
+
+  // Build capabilities object
+  const capabilities: Record<string, { requested: boolean }> = {};
+  if (bankAccountsEnabled) {
+    capabilities.bank_accounts = { requested: true };
+  }
+  if (cardsEnabled) {
+    capabilities.cards = { requested: true };
+  }
+
+  // Build identity object - country is always required
+  const identity = prefillIdentity
+    ? {
         country: "us",
         entity_type: "individual",
         individual: {
@@ -38,14 +45,26 @@ export async function GET() {
             country: "US",
           },
         },
-      },
+      }
+    : {
+        country: "us",
+      };
+
+  // Create account using fetch since SDK doesn't support v2 accounts with cards
+  const accountResponse = await fetch("https://api.stripe.com/v2/core/accounts", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/json",
+      "Stripe-Version": "2025-09-30.preview",
+    },
+    body: JSON.stringify({
+      contact_email: "jenny.rosen@example.com",
+      display_name: "Ara demo app PUB PREVIEW",
+      identity,
       configuration: {
         recipient: {
-          capabilities: {
-            cards: {
-              requested: true,
-            },
-          },
+          capabilities,
         },
       },
       include: ["configuration.recipient", "identity", "requirements"],

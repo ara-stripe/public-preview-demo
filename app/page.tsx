@@ -5,11 +5,19 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
+  const [bankAccountsEnabled, setBankAccountsEnabled] = useState(false);
+  const [cardsEnabled, setCardsEnabled] = useState(true);
+  const [prefillIdentity, setPrefillIdentity] = useState(true);
 
   const handleGetMoney = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/money");
+      const params = new URLSearchParams({
+        bankAccounts: bankAccountsEnabled.toString(),
+        cards: cardsEnabled.toString(),
+        prefillIdentity: prefillIdentity.toString(),
+      });
+      const response = await fetch(`/api/money?${params}`);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`API error: ${response.status} - ${errorText}`);
@@ -52,29 +60,72 @@ export default function Home() {
 
         {/* Debug Panel */}
         <div className="bg-zinc-900 p-6 rounded-lg w-full text-sm font-mono border border-zinc-800">
-          <h2 className="text-white text-lg font-bold mb-4">Debug Log</h2>
-          <div className="space-y-2">
-            {accountId && (
-              <div className="text-green-400">
-                ✓ Account created: {accountId}
-              </div>
-            )}
-            {accountUrl && (
-              <div className="text-blue-400 space-y-1">
-                <div className="flex items-center gap-2">
-                  ℹ️ Account link URL available
-                  <button
-                    onClick={() => window.open(accountUrl, "_blank")}
-                    className="px-2 py-1 bg-white text-black rounded hover:bg-zinc-200 text-xs"
-                  >
-                    Open URL
-                  </button>
+          <h2 className="text-white text-lg font-bold mb-4">Debug Settings</h2>
+
+          {/* Configuration Section */}
+          <div className="space-y-3 mb-6 pb-6 border-b border-zinc-700">
+            <div className="text-zinc-400 font-bold text-xs uppercase mb-2">
+              Capabilities
+            </div>
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={bankAccountsEnabled}
+                onChange={(e) => setBankAccountsEnabled(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Bank Accounts</span>
+            </label>
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={cardsEnabled}
+                onChange={(e) => setCardsEnabled(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Cards</span>
+            </label>
+
+            <div className="text-zinc-400 font-bold text-xs uppercase mb-2 mt-4">
+              Identity
+            </div>
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={prefillIdentity}
+                onChange={(e) => setPrefillIdentity(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Prefill Identity Information</span>
+            </label>
+          </div>
+
+          {/* Log Section */}
+          <div>
+            <h3 className="text-white font-bold mb-2">Log</h3>
+            <div className="space-y-2">
+              {accountId && (
+                <div className="text-green-400">
+                  ✓ Account created: {accountId}
                 </div>
-                <div className="text-blue-300 text-xs break-all pl-4">
-                  {accountUrl}
+              )}
+              {accountUrl && (
+                <div className="text-blue-400 space-y-1">
+                  <div className="flex items-center gap-2">
+                    ℹ️ Account link URL available
+                    <button
+                      onClick={() => window.open(accountUrl, "_blank")}
+                      className="px-2 py-1 bg-white text-black rounded hover:bg-zinc-200 text-xs"
+                    >
+                      Open URL
+                    </button>
+                  </div>
+                  <div className="text-blue-300 text-xs break-all pl-4">
+                    {accountUrl}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
