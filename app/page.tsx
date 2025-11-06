@@ -5,7 +5,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
-  const [bankAccountsEnabled, setBankAccountsEnabled] = useState(false);
+  const [bankAccountsEnabled, setBankAccountsEnabled] = useState(true);
   const [cardsEnabled, setCardsEnabled] = useState(false);
   const [prefillIdentity, setPrefillIdentity] = useState(false);
 
@@ -50,15 +50,18 @@ export default function Home() {
     lastPrefillIdentity !== prefillIdentity
   );
 
+  // Check if at least one capability is enabled
+  const hasCapabilities = bankAccountsEnabled || cardsEnabled;
+
   // Determine button text and action
   const getButtonConfig = () => {
     if (!accountUrl) {
-      return { text: "Start Demo", action: handleGetMoney };
+      return { text: "Start Demo", action: handleGetMoney, disabled: !hasCapabilities };
     }
     if (settingsChanged) {
-      return { text: "Regenerate Link", action: handleGetMoney };
+      return { text: "Regenerate Link", action: handleGetMoney, disabled: !hasCapabilities };
     }
-    return { text: "Open Link", action: () => window.open(accountUrl, "_blank") };
+    return { text: "Open Link", action: () => window.open(accountUrl, "_blank"), disabled: false };
   };
 
   const buttonConfig = getButtonConfig();
@@ -71,7 +74,7 @@ export default function Home() {
         </p>
         <button
           onClick={buttonConfig.action}
-          disabled={loading}
+          disabled={loading || buttonConfig.disabled}
           className="px-8 py-4 rounded-full text-2xl font-bold text-black
           bg-white
           hover:scale-105 transition-transform
@@ -110,6 +113,12 @@ export default function Home() {
               />
               <span>Cards</span>
             </label>
+
+            {!hasCapabilities && (
+              <p className="text-yellow-400 text-xs mt-2">
+                ⚠️ At least one capability must be enabled
+              </p>
+            )}
 
             <div className="text-zinc-400 font-bold text-xs uppercase mb-2 mt-4">
               Identity
