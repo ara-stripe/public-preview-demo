@@ -6,8 +6,13 @@ export default function Home() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
   const [bankAccountsEnabled, setBankAccountsEnabled] = useState(false);
-  const [cardsEnabled, setCardsEnabled] = useState(true);
-  const [prefillIdentity, setPrefillIdentity] = useState(true);
+  const [cardsEnabled, setCardsEnabled] = useState(false);
+  const [prefillIdentity, setPrefillIdentity] = useState(false);
+
+  // Track settings used for current URL to detect changes
+  const [lastBankAccountsEnabled, setLastBankAccountsEnabled] = useState<boolean | null>(null);
+  const [lastCardsEnabled, setLastCardsEnabled] = useState<boolean | null>(null);
+  const [lastPrefillIdentity, setLastPrefillIdentity] = useState<boolean | null>(null);
 
   const handleGetMoney = async () => {
     setLoading(true);
@@ -25,6 +30,12 @@ export default function Home() {
       const data = await response.json();
       setAccountUrl(data.url);
       setAccountId(data.accountId);
+
+      // Save the settings used for this URL generation
+      setLastBankAccountsEnabled(bankAccountsEnabled);
+      setLastCardsEnabled(cardsEnabled);
+      setLastPrefillIdentity(prefillIdentity);
+
       setLoading(false);
     } catch (error) {
       console.error("Error fetching money:", error);
@@ -32,11 +43,25 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    if (accountUrl) {
-      window.open(accountUrl, "_blank");
+  // Check if settings have changed since last URL generation
+  const settingsChanged = accountUrl !== null && (
+    lastBankAccountsEnabled !== bankAccountsEnabled ||
+    lastCardsEnabled !== cardsEnabled ||
+    lastPrefillIdentity !== prefillIdentity
+  );
+
+  // Determine button text and action
+  const getButtonConfig = () => {
+    if (!accountUrl) {
+      return { text: "Start Demo", action: handleGetMoney };
     }
-  }, [accountUrl]);
+    if (settingsChanged) {
+      return { text: "Regenerate Link", action: handleGetMoney };
+    }
+    return { text: "Open Link", action: () => window.open(accountUrl, "_blank") };
+  };
+
+  const buttonConfig = getButtonConfig();
 
   return (
     <div className="grid place-items-center min-h-screen bg-black">
@@ -45,7 +70,7 @@ export default function Home() {
           This is a Global Payouts demo page. Hit the button below to create a test recipient and collect details using the Stripe-hosted onboarding form
         </p>
         <button
-          onClick={handleGetMoney}
+          onClick={buttonConfig.action}
           disabled={loading}
           className="px-8 py-4 rounded-full text-2xl font-bold text-black
           bg-white
@@ -54,7 +79,7 @@ export default function Home() {
           disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className={loading ? "animate-ping" : ""}>
-            {loading ? "Getting Paid..." : "Get Paid"}
+            {loading ? "Loading..." : buttonConfig.text}
           </span>
         </button>
 
@@ -111,15 +136,7 @@ export default function Home() {
               )}
               {accountUrl && (
                 <div className="text-blue-400 space-y-1">
-                  <div className="flex items-center gap-2">
-                    ℹ️ Account link URL available
-                    <button
-                      onClick={() => window.open(accountUrl, "_blank")}
-                      className="px-2 py-1 bg-white text-black rounded hover:bg-zinc-200 text-xs"
-                    >
-                      Open URL
-                    </button>
-                  </div>
+                  <div>ℹ️ Account link URL available</div>
                   <div className="text-blue-300 text-xs break-all pl-4">
                     {accountUrl}
                   </div>
