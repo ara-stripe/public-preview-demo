@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const prefillIdentity = searchParams.get("prefillIdentity") === "true";
 
   // Build capabilities object
-  const capabilities: Record<string, any> = {};
+  const capabilities: Record<string, { requested: boolean } | { local: { requested: boolean }; wire: { requested: boolean } }> = {};
   if (bankAccountsEnabled) {
     capabilities.bank_accounts = {
       local: { requested: true },
