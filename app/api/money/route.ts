@@ -9,18 +9,22 @@ export async function GET(request: NextRequest) {
 
   // Parse query parameters
   const searchParams = request.nextUrl.searchParams;
-  const bankAccountsEnabled = searchParams.get("bankAccounts") === "true";
+  const bankAccountLocalEnabled = searchParams.get("bankAccountLocal") === "true";
+  const bankAccountWireEnabled = searchParams.get("bankAccountWire") === "true";
   const cardsEnabled = searchParams.get("cards") === "true";
   const prefillIdentity = searchParams.get("prefillIdentity") === "true";
 
   // Build capabilities object
   const capabilities: Record<string, { requested: boolean } | { local: { requested: boolean }; wire: { requested: boolean } }> = {};
-  if (bankAccountsEnabled) {
+  
+  // Add bank_accounts capability if either local or wire is enabled
+  if (bankAccountLocalEnabled || bankAccountWireEnabled) {
     capabilities.bank_accounts = {
-      local: { requested: true },
-      wire: { requested: false },
+      local: { requested: bankAccountLocalEnabled },
+      wire: { requested: bankAccountWireEnabled },
     };
   }
+  
   if (cardsEnabled) {
     capabilities.cards = { requested: true };
   }

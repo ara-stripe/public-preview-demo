@@ -5,12 +5,14 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [accountUrl, setAccountUrl] = useState<string | null>(null);
-  const [bankAccountsEnabled, setBankAccountsEnabled] = useState(true);
+  const [bankAccountLocalEnabled, setBankAccountLocalEnabled] = useState(true);
+  const [bankAccountWireEnabled, setBankAccountWireEnabled] = useState(false);
   const [cardsEnabled, setCardsEnabled] = useState(false);
   const [prefillIdentity, setPrefillIdentity] = useState(false);
 
   // Track settings used for current URL to detect changes
-  const [lastBankAccountsEnabled, setLastBankAccountsEnabled] = useState<boolean | null>(null);
+  const [lastBankAccountLocalEnabled, setLastBankAccountLocalEnabled] = useState<boolean | null>(null);
+  const [lastBankAccountWireEnabled, setLastBankAccountWireEnabled] = useState<boolean | null>(null);
   const [lastCardsEnabled, setLastCardsEnabled] = useState<boolean | null>(null);
   const [lastPrefillIdentity, setLastPrefillIdentity] = useState<boolean | null>(null);
 
@@ -18,7 +20,8 @@ export default function Home() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        bankAccounts: bankAccountsEnabled.toString(),
+        bankAccountLocal: bankAccountLocalEnabled.toString(),
+        bankAccountWire: bankAccountWireEnabled.toString(),
         cards: cardsEnabled.toString(),
         prefillIdentity: prefillIdentity.toString(),
       });
@@ -32,7 +35,8 @@ export default function Home() {
       setAccountId(data.accountId);
 
       // Save the settings used for this URL generation
-      setLastBankAccountsEnabled(bankAccountsEnabled);
+      setLastBankAccountLocalEnabled(bankAccountLocalEnabled);
+      setLastBankAccountWireEnabled(bankAccountWireEnabled);
       setLastCardsEnabled(cardsEnabled);
       setLastPrefillIdentity(prefillIdentity);
 
@@ -45,13 +49,14 @@ export default function Home() {
 
   // Check if settings have changed since last URL generation
   const settingsChanged = accountUrl !== null && (
-    lastBankAccountsEnabled !== bankAccountsEnabled ||
+    lastBankAccountLocalEnabled !== bankAccountLocalEnabled ||
+    lastBankAccountWireEnabled !== bankAccountWireEnabled ||
     lastCardsEnabled !== cardsEnabled ||
     lastPrefillIdentity !== prefillIdentity
   );
 
   // Check if at least one capability is enabled
-  const hasCapabilities = bankAccountsEnabled || cardsEnabled;
+  const hasCapabilities = bankAccountLocalEnabled || bankAccountWireEnabled || cardsEnabled;
 
   // Determine button text and action
   const getButtonConfig = () => {
@@ -98,11 +103,20 @@ export default function Home() {
             <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
               <input
                 type="checkbox"
-                checked={bankAccountsEnabled}
-                onChange={(e) => setBankAccountsEnabled(e.target.checked)}
+                checked={bankAccountLocalEnabled}
+                onChange={(e) => setBankAccountLocalEnabled(e.target.checked)}
                 className="w-4 h-4 cursor-pointer"
               />
-              <span>Bank Accounts</span>
+              <span>Bank Account (Local)</span>
+            </label>
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={bankAccountWireEnabled}
+                onChange={(e) => setBankAccountWireEnabled(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Bank Account (Wire)</span>
             </label>
             <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
               <input
