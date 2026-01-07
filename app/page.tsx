@@ -8,11 +8,10 @@ export default function Home() {
   const [bankAccountsEnabled, setBankAccountsEnabled] = useState(true);
   const [cardsEnabled, setCardsEnabled] = useState(false);
   const [prefillIdentity, setPrefillIdentity] = useState(false);
-
-  // Track settings used for current URL to detect changes
-  const [lastBankAccountsEnabled, setLastBankAccountsEnabled] = useState<boolean | null>(null);
-  const [lastCardsEnabled, setLastCardsEnabled] = useState<boolean | null>(null);
-  const [lastPrefillIdentity, setLastPrefillIdentity] = useState<boolean | null>(null);
+  const [country, setCountry] = useState<"us" | "gb">("us");
+  const [useQA, setUseQA] = useState(false);
+  const [accountLinkPrefix, setAccountLinkPrefix] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const handleGetMoney = async () => {
     setLoading(true);
@@ -21,6 +20,9 @@ export default function Home() {
         bankAccounts: bankAccountsEnabled.toString(),
         cards: cardsEnabled.toString(),
         prefillIdentity: prefillIdentity.toString(),
+        country: country,
+        useQA: useQA.toString(),
+        accountLinkPrefix: accountLinkPrefix,
       });
       const response = await fetch(`/api/money?${params}`);
       if (!response.ok) {
@@ -31,11 +33,6 @@ export default function Home() {
       setAccountUrl(data.url);
       setAccountId(data.accountId);
 
-      // Save the settings used for this URL generation
-      setLastBankAccountsEnabled(bankAccountsEnabled);
-      setLastCardsEnabled(cardsEnabled);
-      setLastPrefillIdentity(prefillIdentity);
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching money:", error);
@@ -43,28 +40,21 @@ export default function Home() {
     }
   };
 
-  // Check if settings have changed since last URL generation
-  const settingsChanged = accountUrl !== null && (
-    lastBankAccountsEnabled !== bankAccountsEnabled ||
-    lastCardsEnabled !== cardsEnabled ||
-    lastPrefillIdentity !== prefillIdentity
-  );
-
   // Check if at least one capability is enabled
   const hasCapabilities = bankAccountsEnabled || cardsEnabled;
 
-  // Determine button text and action
-  const getButtonConfig = () => {
-    if (!accountUrl) {
-      return { text: "Start Demo", action: handleGetMoney, disabled: !hasCapabilities };
+  // Copy URL to clipboard
+  const copyToClipboard = async () => {
+    if (accountUrl) {
+      try {
+        await navigator.clipboard.writeText(accountUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (error) {
+        console.error("Failed to copy:", error);
+      }
     }
-    if (settingsChanged) {
-      return { text: "Regenerate Link", action: handleGetMoney, disabled: !hasCapabilities };
-    }
-    return { text: "Open Link", action: () => window.open(accountUrl, "_blank"), disabled: false };
   };
-
-  const buttonConfig = getButtonConfig();
 
   return (
     <div className="grid place-items-center min-h-screen bg-black">
@@ -72,19 +62,47 @@ export default function Home() {
         <p className="text-white text-center text-lg max-w-xl">
           This is a Global Payouts demo page. Hit the button below to create a test recipient and collect details using the Stripe-hosted onboarding form
         </p>
-        <button
-          onClick={buttonConfig.action}
-          disabled={loading || buttonConfig.disabled}
-          className="px-8 py-4 rounded-full text-2xl font-bold text-black
-          bg-white
-          hover:scale-105 transition-transform
-          shadow-2xl shadow-white/10
-          disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className={loading ? "animate-ping" : ""}>
-            {loading ? "Loading..." : buttonConfig.text}
-          </span>
-        </button>
+        
+        {!accountUrl ? (
+          <button
+            onClick={handleGetMoney}
+            disabled={loading || !hasCapabilities}
+            className="px-8 py-4 rounded-full text-2xl font-bold text-black
+            bg-white
+            hover:scale-105 transition-transform
+            shadow-2xl shadow-white/10
+            disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className={loading ? "animate-ping" : ""}>
+              {loading ? "Loading..." : "Start Demo"}
+            </span>
+          </button>
+        ) : (
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => window.open(accountUrl, "_blank")}
+              disabled={loading}
+              className="px-8 py-4 rounded-full text-2xl font-bold text-black
+              bg-white
+              hover:scale-105 transition-transform
+              shadow-2xl shadow-white/10
+              disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Open Link
+            </button>
+            <button
+              onClick={handleGetMoney}
+              disabled={loading || !hasCapabilities}
+              className="px-8 py-4 rounded-full text-2xl font-bold text-black
+              bg-white
+              hover:scale-105 transition-transform
+              shadow-2xl shadow-white/10
+              disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Loading..." : "Regenerate Link"}
+            </button>
+          </div>
+        )}
 
         {/* Debug Panel */}
         <div className="bg-zinc-900 p-6 rounded-lg w-full text-sm font-mono border border-zinc-800">
@@ -123,6 +141,18 @@ export default function Home() {
             <div className="text-zinc-400 font-bold text-xs uppercase mb-2 mt-4">
               Identity
             </div>
+
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value as "us" | "gb")}
+                className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+              >
+                <option value="us">United States</option>
+                <option value="gb">United Kingdom</option>
+              </select>
+            </label>
+            
             <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
               <input
                 type="checkbox"
@@ -132,6 +162,40 @@ export default function Home() {
               />
               <span>Prefill Identity Information</span>
             </label>
+
+
+            <div className="text-zinc-400 font-bold text-xs uppercase mb-2 mt-4">
+              QA/Devbox
+            </div>
+            <label className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+              <input
+                type="checkbox"
+                checked={useQA}
+                onChange={(e) => setUseQA(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Use QA</span>
+            </label>
+
+            {useQA && (
+              <div className="ml-7 mt-2">
+                <label className="flex flex-col gap-2">
+                  <span className="flex items-center gap-3 text-white cursor-pointer hover:text-zinc-300">
+                    Devbox account link prefix
+                  </span>
+                  <span className="text-zinc-400 text-xs font-bold uppercase">
+                    USERNAME-DEVBOX_QUALIFIER
+                  </span>
+                  <input
+                    type="text"
+                    value={accountLinkPrefix}
+                    onChange={(e) => setAccountLinkPrefix(e.target.value)}
+                    placeholder="pkbr-0-mx3b"
+                    className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Log Section */}
@@ -145,8 +209,11 @@ export default function Home() {
               )}
               {accountUrl && (
                 <div className="text-blue-400 space-y-1">
-                  <div>ℹ️ Account link URL available</div>
-                  <div className="text-blue-300 text-xs break-all pl-4">
+                  <div>ℹ️ Account link URL available {copied && <span className="text-green-400">(Copied!)</span>}</div>
+                  <div 
+                    onClick={copyToClipboard}
+                    className="text-blue-300 text-xs break-all pl-4 cursor-pointer hover:text-blue-200 transition-colors"
+                  >
                     {accountUrl}
                   </div>
                 </div>
